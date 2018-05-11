@@ -21,7 +21,7 @@ module BlockStack
         end
 
         def execute
-          # TODO
+          dataset.find(to_mongo_query).to_a
         end
 
         protected
@@ -89,7 +89,7 @@ module BlockStack
         end
 
         def _like_to_mongo(exp)
-          { exp.attribute => { '$regex' => /^#{Regexp.escape(exp.expression.to_s).gsub('*', '.*')}$/.inspect, '$options' => 'i' } }
+          { exp.attribute => { '$regex' => /^#{Regexp.escape(exp.expression.to_s).gsub('*', '.*')}$/, '$options' => 'i' } }
         end
 
         def _match_to_mongo(exp)
@@ -99,19 +99,19 @@ module BlockStack
         end
 
         def _contains_to_mongo(exp)
-          { exp.attribute => { '$in' => [exp.expression].flatten(1) } }
+          { exp.attribute => { '$regex' => /#{Regexp.escape(exp.expression.to_s)}/, '$options' => 'i' } }
         end
 
         def _within_to_mongo(exp)
-          # TODO
+          { exp.attribute => { '$in' => [exp.expression].flatten(1) } }
         end
 
         def _start_with_to_mongo(exp)
-          # TODO
+          { exp.attribute => { '$regex' => /^#{Regexp.escape(exp.expression.to_s)}/, '$options' => 'i' } }
         end
 
         def _end_with_to_mongo(exp)
-          # TODO
+          { exp.attribute => { '$regex' => /#{Regexp.escape(exp.expression.to_s)}$/, '$options' => 'i' } }
         end
 
         def _between_to_mongo(exp)
