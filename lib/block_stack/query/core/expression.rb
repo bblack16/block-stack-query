@@ -48,18 +48,26 @@ module BlockStack
 
       def greater_than(value)
         value > expression
+      rescue ArgumentError => e
+        false
       end
 
       def less_than(value)
         value < expression
+      rescue ArgumentError => e
+        false
       end
 
       def greater_than_or_equal(value)
         value >= expression
+      rescue ArgumentError => e
+        false
       end
 
       def less_than_or_equal(value)
         value <= expression
+      rescue ArgumentError => e
+        false
       end
 
       def match(value)
