@@ -4,6 +4,7 @@ require_relative 'group_component'
 require_relative 'expression'
 require_relative 'required_group'
 require_relative 'optional_group'
+require_relative 'string'
 
 module BlockStack
   # Query is the base class for BlockStack::Query and provides the parsing of
