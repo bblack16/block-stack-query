@@ -1,14 +1,14 @@
 module BlockStack
   class Query
     OPERATORS = {
-      equal:                 ['==', '=', / is (?!like|greater|less|not)/, 'equals', / (is\s)?equal to /i, /\:\s?(?!like|greater|less|not)?/],
-      not_equal:             ['!=', '!:', / is not (?!like|greater|less|not)/, / isn\'?t /i, / (is\s)?not equal(\sto)? /i],
-      like:                  ['~', '~~', / (is\s)?like /i],
+      equal:                 ['==', '=', / is (?!like|greater|less|not)/, 'equals', 'is equal to', 'equal to', /\:\s?(?!like|greater|less|not)?/],
+      not_equal:             ['!=', '!:', / is not (?!like|greater|less|not)/, / isn\'?t /i, 'is not equal to', 'not equal to'],
+      like:                  ['~', '~~', / is like /i, 'like'],
       match:                 ['=~', / matches /i],
-      greater_than_or_equal: ['>=', 'gte', / (is\s)?greater than or equal to /i],
-      greater_than:          ['>', 'gt', / (is\s)?greater than /i],
-      less_than_or_equal:    ['<=', 'lte', / (is\s)?less than or equal to /i],
-      less_than:             ['<', 'lt', / (is\s)?less than /i],
+      greater_than_or_equal: ['>=', 'gte', 'is greater than or equal to', 'greater than or equal to'],
+      greater_than:          ['>', 'gt', 'is greater than', 'greater than'],
+      less_than_or_equal:    ['<=', 'lte', 'is less than or equal to', 'less than or equal to'],
+      less_than:             ['<', 'lt', 'is less than', 'less than'],
       contains:              ['contains'],
       within:                ['in', 'within'],
       between:               ['>=<', 'between'],
