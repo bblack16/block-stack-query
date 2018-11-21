@@ -6,7 +6,7 @@ module BlockStack
       class Elasticsearch < Query::Adapter
 
         def self.classes
-          ['Elasticsearch::Client', 'Elasticsearch::Transport::Client']
+          ['Elasticsearch::Client', 'Elasticsearch::Transport::Client', 'Elasticsearch::Dataset']
         end
 
         def to_native
@@ -14,18 +14,26 @@ module BlockStack
         end
 
         def to_query_dsl
-          query.expressions.map do |expression|
-            {
-              query: {
-                query_string: _to_query_dsl(expression).uncapsulate('(', limit: 1)
+          {
+            query: {
+              query_string: {
+                query: query.expressions.map do |expression|
+                  _to_query_dsl(expression).uncapsulate('(', limit: 1)
+                end.join(' AND ')
               }
             }
-          end
+          }
         end
 
-        # TODO Need to add dataset support to Elasticsearch gem
         def execute
-          dataset.search(body: to_query_dsl).to_a
+          case dataset.class.to_s
+          when 'Elasticsearch::Dataset'
+            dataset.search(to_query_dsl).keys_to_sym.hpath('hits.hits.[0..-1]').map do |res|
+              res[:_source].merge(res.only(:_id, :_type, :_index))
+            end
+          else
+            dataset.search(body: to_query_dsl).keys_to_sym.hpath('hits.hits.[0..-1]._source')
+          end
         end
 
         protected
