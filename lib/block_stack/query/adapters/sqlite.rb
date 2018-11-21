@@ -26,7 +26,7 @@ module BlockStack
         protected
 
         def _expression_to_s(expression)
-          case expression
+          str = case expression
           when RequiredGroup
             _required_to_sql(expression)
           when OptionalGroup
@@ -39,13 +39,13 @@ module BlockStack
         def _optional_to_sql(group)
           group.expressions.map do |expression|
             _expression_to_s(expression)
-          end.join(' OR ')
+          end.join(' OR ').encapsulate('(')
         end
 
         def _required_to_sql(group)
           group.expressions.map do |expression|
             _expression_to_s(expression)
-          end.join(' AND ')
+          end.join(' AND ').encapsulate('(')
         end
 
         def _expression_to_sql(expression)
