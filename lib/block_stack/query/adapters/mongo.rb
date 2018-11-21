@@ -117,7 +117,7 @@ module BlockStack
         def _between_to_mongo(exp)
           start, stop = case exp.expression
           when Range
-            [exp.expression.start, exp.expression.end]
+            [exp.expression.first, exp.expression.last]
           else
             exp.expression
           end
