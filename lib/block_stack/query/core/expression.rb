@@ -99,7 +99,7 @@ module BlockStack
       end
 
       def between(value)
-        (expression) === value
+        Query::Util.to_range(expression) === value
       end
 
       # TODO Add handling for regexp
