@@ -119,7 +119,8 @@ module BlockStack
         end
 
         def _between_to_s(exp)
-          "#{exp.attribute_to_s}#{exp.inverse? ? ' NOT' : nil} BETWEEN #{exp.expression.begin} AND #{exp.expression.end}"
+          expression = Query::Util.to_range(exp.expression)
+          "#{exp.attribute_to_s}#{exp.inverse? ? ' NOT' : nil} BETWEEN #{expression.begin} AND #{expression.end}"
         end
       end
     end

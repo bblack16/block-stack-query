@@ -115,16 +115,11 @@ module BlockStack
         end
 
         def _between_to_mongo(exp)
-          start, stop = case exp.expression
-          when Range
-            [exp.expression.first, exp.expression.last]
-          else
-            exp.expression
-          end
+          expression = Query::Util.to_range(exp.expression)
           {
             exp.attribute => {
-              '$lte' => start,
-              '$gte' => stop
+              '$gte' => expression.first,
+              '$lte' => expression.last
             }
           }
         end

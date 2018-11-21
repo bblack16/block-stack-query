@@ -17,7 +17,7 @@ module BlockStack
           query.expressions.map do |expression|
             {
               query: {
-                query_string: _to_query_dsl(expression)
+                query_string: _to_query_dsl(expression).uncapsulate('(', limit: 1)
               }
             }
           end
@@ -125,7 +125,7 @@ module BlockStack
 
         # TODO Improve how ranges of dates work
         def _between_to_query_dsl(exp)
-          expression = exp.expression.is_a?(Range) ? exp.expression : Range.new([exp.expression].flatten.first, [exp.expression].flatten.last)
+          expression = Query::Util.to_range(exp.expression)
           "#{exp.inverse? ? 'NOT ' : nil}#{exp.attribute}:#{_value_to_query_dsl(expression)}"
         end
       end
