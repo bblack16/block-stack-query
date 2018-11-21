@@ -9,7 +9,7 @@ module BlockStack
 
         def to_native
           query.expressions.map do |expression|
-            _expression_to_s(expression)
+            _expression_to_s(expression).uncapsulate('(', limit: 1)
           end.join(' AND ')
         end
 
