@@ -15,7 +15,11 @@ module BlockStack
 
         def to_query_dsl
           array = query.expressions.map do |expression|
-            _to_query_dsl(expression)
+            {
+              query: {
+                bool: _to_query_dsl(expression)
+              }
+            }
           end
           array.size == 1 ? array.first : array
         end
@@ -28,18 +32,14 @@ module BlockStack
         protected
 
         def _to_query_dsl(expression)
-          {
-            query: {
-              bool: case expression
-                    when RequiredGroup
-                      _required_to_query_dsl(expression)
-                    when OptionalGroup
-                      _optional_to_query_dsl(expression)
-                    when Expression
-                      _expression_to_query_dsl(expression)
-                    end
-            }
-          }
+          case expression
+          when RequiredGroup
+            _required_to_query_dsl(expression)
+          when OptionalGroup
+            _optional_to_query_dsl(expression)
+          when Expression
+            _expression_to_query_dsl(expression)
+          end
         end
 
         def _optional_to_query_dsl(group)
