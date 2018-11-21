@@ -13,7 +13,14 @@ module BlockStack
       protected
 
       def analyze
-        self.expressions = original_expression.map { |expression| Query.parse_requirements(expression) }
+        expressions = original_expression
+        if matches = original_expression.find_all { |exp| OPERATORS[:between].any? { |op| exp.qsplit(' ')[-2] == op } }
+          matches.each do |match|
+            index = expressions.index(match)
+            expressions[index] = [match, expressions.delete_at(index + 1)].join('..')
+          end
+        end
+        self.expressions = expressions.map { |expression| Query.parse_requirements(expression) }
       end
     end
   end
