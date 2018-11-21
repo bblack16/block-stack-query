@@ -18,20 +18,6 @@ module BlockStack
 
     after :original_expression=, :analyze
 
-    # TODO Incorporate or delete this code
-    # DEFAULT_LOCALE = :english
-    #
-    # def self.locale
-    #   @locale ||= DEFAULT_LOCALE
-    # end
-    #
-    # def self.locale=(language)
-    #   require_relative "../localization/#{language}"
-    #   @locale = language.to_sym
-    # end
-    #
-    # self.locale = DEFAULT_LOCALE
-
     def ==(obj)
       return to_s == obj.to_s if obj.is_a?(Query)
       super
