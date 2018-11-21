@@ -14,14 +14,13 @@ module BlockStack
         end
 
         def to_query_dsl
-          array = query.expressions.map do |expression|
+          query.expressions.map do |expression|
             {
               query: {
-                bool: _to_query_dsl(expression)
+                query_string: _to_query_dsl(expression)
               }
             }
           end
-          array.size == 1 ? array.first : array
         end
 
         # TODO Need to add dataset support to Elasticsearch gem
@@ -43,11 +42,15 @@ module BlockStack
         end
 
         def _optional_to_query_dsl(group)
-          { should: group.expressions.map { |exp| _to_query_dsl(exp) } }
+          group.expressions.map do |expression|
+            _to_query_dsl(expression)
+          end.join(' OR ').encapsulate('(')
         end
 
         def _required_to_query_dsl(group)
-          { must: group.expressions.map { |exp| _to_query_dsl(exp) } }
+          group.expressions.map do |expression|
+            _to_query_dsl(expression)
+          end.join(' AND ').encapsulate('(')
         end
 
         def _expression_to_query_dsl(expression)
@@ -55,74 +58,75 @@ module BlockStack
         end
 
         def _value_to_query_dsl(value)
-          value
+          case value
+          when Integer, Float, TrueClass, FalseClass
+            value
+          when Regexp
+            value.inspect
+          when Range
+            "[#{value.first} TO #{value.last}#{value.exclude_end? ? '}' : ']'}"
+          when Array
+            "(#{value.map { |v| _value_to_query_dsl(v) }.join(', ')})"
+          else
+            value.to_s.include?(' ') ? "\"#{value}\"" : value.to_s
+          end
         end
 
         def _equal_to_query_dsl(exp)
           return _not_equal_to_query_dsl(exp) if exp.operator == :equal && exp.inverse
-          { match: { exp.attribute => exp.expression } }
+          "#{exp.attribute}:#{_value_to_query_dsl(exp.expression)}"
         end
 
         def _not_equal_to_query_dsl(exp)
           return _equal_to_query_dsl(exp) if exp.operator == :not_equal && exp.inverse
-          { exp.attribute => { '$ne' => exp.expression } }
+          "NOT #{exp.attribute}:#{_value_to_query_dsl(exp.expression)}"
         end
 
         def _greater_than_to_query_dsl(exp)
-          { exp.attribute => { '$gt' => exp.expression } }
+          "#{exp.inverse? ? 'NOT ' : nil}#{exp.attribute}:>#{_value_to_query_dsl(exp.expression)}"
         end
 
         def _less_than_to_query_dsl(exp)
-          { exp.attribute => { '$lt' => exp.expression } }
+          "#{exp.inverse? ? 'NOT ' : nil}#{exp.attribute}:<#{_value_to_query_dsl(exp.expression)}"
         end
 
         def _greater_than_or_equal_to_query_dsl(exp)
-          { exp.attribute => { '$gte' => exp.expression } }
+          "#{exp.inverse? ? 'NOT ' : nil}#{exp.attribute}:>=#{_value_to_query_dsl(exp.expression)}"
         end
 
         def _less_than_or_equal_to_query_dsl(exp)
-          { exp.attribute => { '$lte' => exp.expression } }
+          "#{exp.inverse? ? 'NOT ' : nil}#{exp.attribute}:<=#{_value_to_query_dsl(exp.expression)}"
         end
 
         def _like_to_query_dsl(exp)
-          { exp.attribute => { '$regex' => /^#{Regexp.escape(exp.expression.to_s).gsub('*', '.*')}$/, '$options' => 'i' } }
+          "#{exp.inverse? ? 'NOT ' : nil}#{exp.attribute}:#{_value_to_query_dsl(exp.expression)}"
         end
 
         def _match_to_query_dsl(exp)
-          options = ''
-          options = exp.inspect.split('/').last if exp.expression.is_a?(Regexp)
-          { exp.attribute => { '$regex' => /#{Regexp.escape(exp.expression.to_s)}/, '$options' => options } }
+          expression = exp.expression.is_a?(Regexp) ? exp : /#{exp}/
+          "#{exp.inverse? ? 'NOT ' : nil}#{exp.attribute}:#{_value_to_query_dsl(expression)}"
         end
 
         def _contains_to_query_dsl(exp)
-          { exp.attribute => { '$regex' => /#{Regexp.escape(exp.expression.to_s)}/, '$options' => 'i' } }
+          "#{exp.inverse? ? 'NOT ' : nil}#{exp.attribute}:#{_value_to_query_dsl("*#{exp.expression}*")}"
         end
 
         def _within_to_query_dsl(exp)
-          { exp.attribute => { '$in' => [exp.expression].flatten(1) } }
+          "#{exp.inverse? ? 'NOT ' : nil}#{exp.attribute}:#{_value_to_query_dsl([exp.expression].flatten(1))}"
         end
 
         def _start_with_to_query_dsl(exp)
-          { exp.attribute => { '$regex' => /^#{Regexp.escape(exp.expression.to_s)}/, '$options' => 'i' } }
+          "#{exp.inverse? ? 'NOT ' : nil}#{exp.attribute}:#{_value_to_query_dsl("#{exp.expression}*")}"
         end
 
         def _end_with_to_query_dsl(exp)
-          { exp.attribute => { '$regex' => /#{Regexp.escape(exp.expression.to_s)}$/, '$options' => 'i' } }
+          "#{exp.inverse? ? 'NOT ' : nil}#{exp.attribute}:#{_value_to_query_dsl("*#{exp.expression}")}"
         end
 
+        # TODO Improve how ranges of dates work
         def _between_to_query_dsl(exp)
-          start, stop = case exp.expression
-          when Range
-            [exp.expression.start, exp.expression.end]
-          else
-            exp.expression
-          end
-          {
-            exp.attribute => {
-              '$lte' => start,
-              '$gte' => stop
-            }
-          }
+          expression = exp.expression.is_a?(Range) ? exp.expression : Range.new([exp.expression].flatten.first, [exp.expression].flatten.last)
+          "#{exp.inverse? ? 'NOT ' : nil}#{exp.attribute}:#{_value_to_query_dsl(expression)}"
         end
       end
     end
