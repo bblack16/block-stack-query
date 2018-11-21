@@ -182,7 +182,7 @@ module BlockStack
         elsif string =~ /^(null|nil)$/i
           nil
         elsif string =~ /^\(?\d+(\.\d+)?\.{2,3}\d+(\.\d+)?\)?$/
-          Range.new(*[string.extract_numbers, string =~ /\.{3}/].flatten)
+          Range.new(*[string.split(/\.+/, 2).map(&:to_i), string =~ /\.{3}/].flatten)
         elsif string =~ /^\[.*\]$/
           string.uncapsulate('[', limit: 1).qsplit(',').map { |value| parse_value(value) }
         else
